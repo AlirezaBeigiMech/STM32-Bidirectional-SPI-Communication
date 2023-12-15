@@ -24,8 +24,7 @@
         <li><a href="#installation">Installation</a></li>
       </ul>
     </li>
-    <li><a href="#usage">Usage</a></li>
-    <li><a href="#roadmap">Roadmap</a></li>
+    <li><a href="#Code-overview">Code Overview</a></li>
     <li><a href="#contributing">Contributing</a></li>
     <li><a href="#license">License</a></li>
     <li><a href="#contact">Contact</a></li>
@@ -91,7 +90,7 @@ The pins of master and slave should be connected in this format.
 
 <div align="center">
   <a>
-    <img src="image/spi.drawio.png" >
+    <img src="image/spi1.drawio.png" >
   </a>
 </div> 
 
@@ -100,8 +99,10 @@ Connect both boards to your computer via USB.
 
 <p align="right">(<a href="#readme-top">back to top</a>)</p>
 
-### Code Overview
+## Code Overview
 #### Master Configuration (STM32F439 Discovery): 
+The `EXTI15_10_IRQHandler` function is an interrupt handler that responds to external interrupts on lines 10 to 15. This function plays a crucial role in the SPI communication process between the Master (STM32F439 Discovery) and the Slave (STM32F407 Discovery).
+
 ```c
 void EXTI15_10_IRQHandler(void)
 {
@@ -127,9 +128,16 @@ void EXTI15_10_IRQHandler(void)
   /* USER CODE END EXTI15_10_IRQn 1 */
 }
 ```
+**Key Points:**
 
+* The function first handles the external interrupt triggered on GPIO pin 12.
+* It then reads the state of GPIO pin 12 to determine the direction of communication.
+* If `rec == 1`, the master receives data from the slave. The `HAL_SPI_Receive` function is used for receiving SPI data.
+* If `rec == 0`, the master sends data to the slave. The `HAL_SPI_Transmit_IT` function is used for interrupt-driven data transmission.
+* `TX_Data[0]++` is used to modify the first byte of the data to be transmitted, demonstrating a dynamic data exchange.
 
 #### Slave Configuration (STM32F407 Discovery): 
+The Slave's main loop involves setting up the SPI communication to transmit and receive data to and from the Master.
 
 ```c
 while (1)
@@ -148,8 +156,16 @@ while (1)
   }
 ```
 
+**Key Points:**
 
+* The slave sets a GPIO pin before starting the transmission to signal the master.
+* It uses `HAL_SPI_Transmit` to send data to the master.
+* After transmission, the GPIO pin is reset.
+* The slave then sets up an interrupt-driven receive operation using `HAL_SPI_Receive_IT` to receive data from the master.
+* A delay is introduced for stability and to regulate the communication pacing.
+* The first byte of the transmit buffer (`TX_Data`) is incremented to alter the data in each cycle, showcasing dynamic data exchange.
 
+<p align="right">(<a href="#Code-overview">back to top</a>)</p>
 
 <!-- CONTRIBUTING -->
 ## Contributing
